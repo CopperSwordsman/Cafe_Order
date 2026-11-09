@@ -13,7 +13,7 @@ SCOPES = [
 
 FORM_ID = '1pfUopa6oKCnm9mD1XayHGcvoba_AoyIMCH9zN0rnPV8'
 SHEET_ID = '1lu5x9W68S_4fre0-62HsQEJib-F5dfmf0wTU5cVLrDA'
-MENUITEMS = ["Miso Soup", "Edamame", "Gyoza", "Musubi", "Onigiri", "Curry", "Pokemon Matcha Cookies", "Magikarp Taiyaki", "Chocolate Dipped Strawberries", "Ice Cream Float", "Matcha", "Iced Coffee", "Themed Soda", "Special Water", "Ramune"]
+MENUITEMS = ["Miso Soup", "Edamame", "(4) Gyoza", "Spam Musubi", "Pokeball Onigiri", "Japanese Beef Curry", "Matcha Cookie", "Nutella Taiyaki", "(3) Chocolate Pokeball Strawberries", "Ramune", "Matcha", "Iced Coffee(oatmilk) ","Iced Coffee(2% milk)", "Melon Soda", "Grape Soda", "Orange Soda", "Special Maid Water", "Ice Cream Float"]
 PROCESSED_FILE = 'processed_responses.json'
 
 def main():
@@ -38,6 +38,7 @@ def main():
     sheet_result = sheets_service.spreadsheets().values().get(
         spreadsheetId=SHEET_ID, range=sheet_range
     ).execute()
+    print(sheet_result)
     rows = sheet_result.get('values', [])
 
     if len(rows) < 2:
@@ -64,7 +65,7 @@ def main():
         if 'questionItem' in item:
             q_id = item['questionItem']['question']['questionId']
             question_id_to_title[q_id] = item.get('title') or ""
-
+    print(question_id_to_title)
     # 3. Read processed response IDs
     processed_ids = set()
     if os.path.exists(PROCESSED_FILE):
