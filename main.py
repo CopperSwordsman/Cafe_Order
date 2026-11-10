@@ -15,7 +15,7 @@ SCOPES = [
 
 FORM_ID = '1pfUopa6oKCnm9mD1XayHGcvoba_AoyIMCH9zN0rnPV8'
 SHEET_ID = '1lu5x9W68S_4fre0-62HsQEJib-F5dfmf0wTU5cVLrDA'
-MENUITEMS = ["Miso Soup", "Edamame", "(4) Gyoza", "Spam Musubi", "Pokeball Onigiri", "Japanese Beef Curry", "Matcha Cookie","Nutella Taiyaki", "(3) Chocolate Pokeball Strawberries", "Ramune","Melon Soda", "Grape Soda","Orange Soda", "Iced Coffee(oatmilk)", "Iced Coffee(2% milk)", "Matcha Latte","Special Maid Water", "Ice Cream Float"]
+MENUITEMS = ["Miso Soup", "Edamame", "(4) Gyoza", "Spam Musubi", "Pokeball Onigiri", "Japanese Beef Curry", "Matcha Cookie","Nutella Taiyaki", "(3) Chocolate Pokeball Strawberries", "Ramune","Melon Soda", "Grape Soda","Orange Soda", "Iced Coffee(oatmilk)", "Iced Coffee(2% milk)", "Matcha Latte","Special Maid Water", "Ice Cream Float Scoop"]
 AVAILABILITY_ITEMS = ["10AM-11AM","11AM-12PM","12PM-1PM","1PM-2PM","2PM-3PM"]
 PROCESSED_FILE = 'processed_responses.json'
 
@@ -184,7 +184,6 @@ def process_orders():
             valueInputOption='USER_ENTERED',
             body=body
         ).execute()
-
         body = {'values': [updated_time_values]}
         sheets_service.spreadsheets().values().update(
             spreadsheetId=SHEET_ID,
@@ -233,7 +232,7 @@ def process_orders():
                     new_options = []
                     for slot in AVAILABILITY_ITEMS:
                         remaining_stock = availability_map.get(slot, 0)
-                        new_options.append({"value": f"{slot} ({remaining_stock})"})
+                        new_options.append({"value": f"{slot} ({remaining_stock} available)"})
 
                     choice_question['options'] = new_options
 
