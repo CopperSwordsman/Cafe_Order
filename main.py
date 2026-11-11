@@ -16,6 +16,7 @@ SCOPES = [
 FORM_ID = '1pfUopa6oKCnm9mD1XayHGcvoba_AoyIMCH9zN0rnPV8'
 SHEET_ID = '1lu5x9W68S_4fre0-62HsQEJib-F5dfmf0wTU5cVLrDA'
 MENUITEMS = ["Miso Soup", "Edamame", "(4) Gyoza", "Spam Musubi", "Pokeball Onigiri", "Japanese Beef Curry", "Matcha Cookie","Nutella Taiyaki", "(3) Chocolate Pokeball Strawberries", "Ramune","Melon Soda", "Grape Soda","Orange Soda", "Iced Coffee(oatmilk)", "Iced Coffee(2% milk)", "Matcha Latte","Special Maid Water", "Ice Cream Float Scoop"]
+PRICES = {"Miso Soup": 2, "Edamame": 2.5, "(4) Gyoza": 3.5, "Spam Musubi": 3, "Pokeball Onigiri": 2.5, "Japanese Beef Curry": 8, "Matcha Cookie": 2.5, "Nutella Taiyaki": 3, "(3) Chocolate Pokeball Strawberries": 4, "Ramune": 3.5, "Melon Soda": 2, "Grape Soda": 2, "Orange Soda": 2, "Iced Coffee(oatmilk)": 6, "Iced Coffee(2% milk)": 5.5, "Matcha Latte": 5, "Special Maid Water": 1, "Ice Cream Float Scoop": 1}
 AVAILABILITY_ITEMS = ["10AM-11AM","11AM-12PM","12PM-1PM","1PM-2PM","2PM-3PM"]
 PROCESSED_FILE = 'processed_responses.json'
 
@@ -101,13 +102,16 @@ def process_orders():
     new_processed_count = 0
     order_totals = {item: 0 for item in MENUITEMS}
     time_slots = {item: 0 for item in AVAILABILITY_ITEMS}
-
+    column_price_data = []
     for resp in responses:
+        bought_items = []
         resp_id = resp.get('responseId')
         if resp_id in processed_ids:
             continue
 
         answers = resp.get('answers', {})
+        total_price = 0
+        name = ""
         for q_id, answer_data in answers.items():
             q_title = question_id_to_title.get(q_id, "") or ""
 
@@ -139,7 +143,8 @@ def process_orders():
 
                 if matched_slot:
                     time_slots[matched_slot] += 1
-
+            if(q_title == "Name (First and Last)"):
+                name = answer_data.get('textAnswers', {}).get('answers', [])[0].get('value','').strip()
             if matched_item in order_totals:
                 choice_answers = answer_data.get('choiceAnswers', {}).get('answers', [])
                 text_answers = answer_data.get('textAnswers', {}).get('answers', [])
@@ -150,9 +155,18 @@ def process_orders():
                 elif text_answers:
                     val = text_answers[0].get('value', '0').strip()
 
+
                 if val.isdigit():
                     order_totals[matched_item] += int(val)
-
+                    total_price += PRICES[matched_item] * int(val)
+                    if(int(val) > 0):
+                        bought_items.append(f"{val} {matched_item}")
+                    if(int(val) == 2 and matched_item == "Spam Musubi"):
+                        total_price -=1
+        row_price_data = [name,f"${total_price}"]
+        for element in bought_items:
+            row_price_data.append(element)
+        column_price_data.append(row_price_data)
         processed_ids.add(resp_id)
         new_processed_count += 1
 
@@ -162,13 +176,14 @@ def process_orders():
 
         updated_stock_values = []
         updated_time_values = []
+
         for header_name in headers:
             current_qty = stock_map.get(header_name, 0)
             ordered_qty = order_totals.get(header_name, 0)
             new_qty = max(0, current_qty - ordered_qty)
             updated_stock_values.append(str(new_qty))
             stock_map[header_name] = new_qty
-
+            total_price += PRICES[header_name] * ordered_qty
         for header_name in availability_headers:
             current_qty = availability_map.get(header_name, 0)
             ordered_qty = time_slots.get(header_name, 0)
@@ -189,6 +204,14 @@ def process_orders():
             spreadsheetId=SHEET_ID,
             range='Times!A2',
             valueInputOption='USER_ENTERED',
+            body=body
+        ).execute()
+        body = {'values': column_price_data}
+        sheets_service.spreadsheets().values().append(
+            spreadsheetId=SHEET_ID,
+            range='Payments!A1',
+            valueInputOption='USER_ENTERED',
+            insertDataOption='INSERT_ROWS',
             body=body
         ).execute()
 
