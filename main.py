@@ -112,6 +112,7 @@ def process_orders():
         answers = resp.get('answers', {})
         total_price = 0
         name = ""
+        base_time = ""
         for q_id, answer_data in answers.items():
             q_title = question_id_to_title.get(q_id, "") or ""
 
@@ -163,7 +164,7 @@ def process_orders():
                         bought_items.append(f"{val} {matched_item}")
                     if(int(val) == 2 and matched_item == "Spam Musubi"):
                         total_price -=1
-        row_price_data = [name,f"${total_price}"]
+        row_price_data = [name,f"${total_price}", base_time, " ", " ", " ", " "]
         for element in bought_items:
             row_price_data.append(element)
         column_price_data.append(row_price_data)
